@@ -49,7 +49,7 @@ export default function LoginPage() {
       } else {
         const supabase = createClient();
         const email = username.includes("@") ? username.toLowerCase() : `${username.toLowerCase()}@farm.local`;
-        
+
         const { data, error: authError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -69,9 +69,8 @@ export default function LoginPage() {
         setProfile(profile || { ...data.user, role: "admin" } as any);
         router.replace("/dashboard");
       }
-    } catch (err: any) {
-      console.error("Login catch-all error:", err);
-      setError(`Connection error: ${err.message || "Please check your internet and environment configuration"}`);
+    } catch {
+      setError("Network error — please try again");
     } finally {
       setLoading(false);
     }
