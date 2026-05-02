@@ -52,8 +52,8 @@ create table if not exists public.partitions (
 );
 alter table public.partitions enable row level security;
 create policy "partitions_read_all" on public.partitions for select using (auth.role() = 'authenticated');
-create policy "partitions_admin_write" on public.partitions for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+create policy "partitions_auth_all" on public.partitions for all
+  using (auth.role() = 'authenticated');
 
 -- ==========================================
 -- LINES (belong to partitions)
@@ -69,8 +69,8 @@ create table if not exists public.lines (
 );
 alter table public.lines enable row level security;
 create policy "lines_read_all" on public.lines for select using (auth.role() = 'authenticated');
-create policy "lines_admin_write" on public.lines for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+create policy "lines_auth_all" on public.lines for all
+  using (auth.role() = 'authenticated');
 
 -- ==========================================
 -- PLANT MASTER (reusable plant names)
@@ -82,8 +82,8 @@ create table if not exists public.plant_master (
 );
 alter table public.plant_master enable row level security;
 create policy "plant_master_read_all" on public.plant_master for select using (auth.role() = 'authenticated');
-create policy "plant_master_admin_write" on public.plant_master for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+create policy "plant_master_auth_all" on public.plant_master for all
+  using (auth.role() = 'authenticated');
 
 -- ==========================================
 -- PLANTS (placed under lines)
@@ -99,8 +99,8 @@ create table if not exists public.plants (
 );
 alter table public.plants enable row level security;
 create policy "plants_read_all" on public.plants for select using (auth.role() = 'authenticated');
-create policy "plants_admin_write" on public.plants for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+create policy "plants_auth_all" on public.plants for all
+  using (auth.role() = 'authenticated');
 
 -- ==========================================
 -- PLANT STATUS LOGS
