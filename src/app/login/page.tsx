@@ -69,8 +69,9 @@ export default function LoginPage() {
         setProfile(profile || { ...data.user, role: "admin" } as any);
         router.replace("/dashboard");
       }
-    } catch {
-      setError("Network error — please try again");
+    } catch (err: any) {
+      console.error("Login catch-all error:", err);
+      setError(`Connection error: ${err.message || "Please check your internet and environment configuration"}`);
     } finally {
       setLoading(false);
     }
