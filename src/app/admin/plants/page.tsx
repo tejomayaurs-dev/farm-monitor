@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
+import { SyncBadge } from "@/components/SyncBadge";
 import { db } from "@/lib/db/dexie";
 import type { Plant, Line, Partition, PlantMaster } from "@/lib/types";
 import { ArrowLeft, Plus, Trash2, RefreshCw } from "lucide-react";
@@ -83,9 +84,12 @@ export default function AdminPlantsPage() {
   return (
     <div className="flex flex-col min-h-dvh bg-gray-50 pb-20">
       <header className="bg-farm-gradient px-4 pt-4 pb-5">
-        <button onClick={() => router.back()} className="flex items-center gap-1 text-green-200 text-sm mb-3">
-          <ArrowLeft className="w-4 h-4" /> Admin
-        </button>
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => router.back()} className="flex items-center gap-1 text-green-200 text-sm">
+            <ArrowLeft className="w-4 h-4" /> Admin
+          </button>
+          <SyncBadge />
+        </div>
         <h1 className="text-white text-2xl font-bold">Plants</h1>
       </header>
 

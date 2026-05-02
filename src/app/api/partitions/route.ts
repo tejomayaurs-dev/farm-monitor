@@ -17,11 +17,20 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("[API/Partitions] Incoming POST request:", body);
+    
     const supabase = await createClient();
     const { data, error } = await supabase.from("partitions").insert(body).select().single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    
+    if (error) {
+      console.error("[API/Partitions] Supabase error:", error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    
+    console.log("[API/Partitions] Successfully created partition:", data);
     return NextResponse.json({ data });
   } catch (e: any) {
+    console.error("[API/Partitions] Server error:", e.message);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

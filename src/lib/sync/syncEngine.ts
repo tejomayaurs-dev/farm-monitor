@@ -88,6 +88,8 @@ export async function syncToBackend(
 async function syncSingle(item: SyncQueueItem, endpoint: string): Promise<boolean> {
   if (item.retry_count >= MAX_RETRIES) return false;
 
+  console.log(`[Sync] Attempting ${item.action_type} to ${endpoint}`, item.payload);
+
   try {
     const res = await fetch(endpoint, {
       method: "POST",
@@ -96,16 +98,20 @@ async function syncSingle(item: SyncQueueItem, endpoint: string): Promise<boolea
     });
 
     if (res.ok) {
+      console.log(`[Sync] Successfully synced ${item.action_type} to ${endpoint}`);
       await markSynced([item.id!]);
       return true;
     } else {
+      const errBody = await res.json().catch(() => ({}));
+      console.error(`[Sync] Failed to sync ${item.action_type} to ${endpoint}:`, res.status, errBody);
       await incrementRetryCount([item.id!]);
       if (item.retry_count + 1 >= MAX_RETRIES) {
         await markFailed([item.id!]);
       }
       return false;
     }
-  } catch {
+  } catch (err: any) {
+    console.error(`[Sync] Network error syncing ${item.action_type} to ${endpoint}:`, err.message);
     return false;
   }
 }
