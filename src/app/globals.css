@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* =======================================
+   CSS Custom Properties (Design Tokens)
+   ======================================= */
+:root {
+  --color-farm-green: #15803d;
+  --color-farm-green-dark: #14532d;
+  --color-farm-green-light: #dcfce7;
+
+  --color-status-good: #16a34a;
+  --color-status-medium: #ca8a04;
+  --color-status-replace: #dc2626;
+  --color-status-nogrowth: #6b7280;
+  --color-status-pest: #ea580c;
+
+  --font-sans: var(--font-inter), 'Noto Sans Kannada', system-ui, sans-serif;
+}
+
+/* =======================================
+   Base Styles
+   ======================================= */
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+html {
+  /* Prevent font scaling in landscape on iOS */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  /* Safe area insets for notched phones */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* =======================================
+   Safe Area Utilities
+   ======================================= */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* =======================================
+   PWA Standalone Mode
+   ======================================= */
+@media all and (display-mode: standalone) {
+  body {
+    background-color: #f9fafb;
+  }
+}
+
+/* =======================================
+   Animations
+   ======================================= */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* =======================================
+   Status Color Classes
+   ======================================= */
+.status-good    { background-color: var(--color-status-good); }
+.status-medium  { background-color: var(--color-status-medium); }
+.status-replace { background-color: var(--color-status-replace); }
+.status-nogrowth{ background-color: var(--color-status-nogrowth); }
+.status-pest    { background-color: var(--color-status-pest); }
+
+/* =======================================
+   Touch-Friendly Buttons
+   ======================================= */
+.btn-touch {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-touch:active {
+  transform: scale(0.97);
+}
+
+/* =======================================
+   Farm Green Gradient Background
+   ======================================= */
+.bg-farm-gradient {
+  background: linear-gradient(135deg, #14532d 0%, #15803d 50%, #16a34a 100%);
+}
+
+/* =======================================
+   Card Styles
+   ======================================= */
+.card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  padding: 1rem;
+}
+
+/* =======================================
+   Input Styles (large for mobile)
+   ======================================= */
+.input-farm {
+  width: 100%;
+  min-height: 52px;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.125rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input-farm:focus {
+  border-color: var(--color-farm-green);
+}
