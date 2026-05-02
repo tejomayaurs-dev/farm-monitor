@@ -31,13 +31,32 @@ export default function AdminLinesPage() {
     });
   }, []);
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (selectedPartitionId) {
-      db.lines.where("partition_id").equals(selectedPartitionId).toArray().then((l) => {
-        setLines(l.sort((a, b) => a.line_number - b.line_number));
-      });
+      loadLines(selectedPartitionId);
     }
   }, [selectedPartitionId]);
+
+  const loadLines = async (partitionId: string) => {
+    setLoading(true);
+    try {
+      const local = await db.lines.where("partition_id").equals(partitionId).toArray();
+      if (local.length > 0) {
+        setLines(local.sort((a, b) => a.line_number - b.line_number));
+      } else {
+        const res = await fetch(`/api/lines?partition_id=${partitionId}`);
+        if (res.ok) {
+          const { data } = await res.json();
+          await db.lines.bulkPut(data);
+          setLines(data.sort((a: any, b: any) => a.line_number - b.line_number));
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAdd = async () => {
     const num = parseInt(newLineNumber);
@@ -123,35 +142,43 @@ export default function AdminLinesPage() {
         </div>
 
         {/* Lines list */}
-        <div className="space-y-2">
-          {lines.map((l) => (
-            <div key={l.id} className="card flex items-center justify-between">
-              <div>
-                <p className="font-bold text-lg">{l.label ?? `Line ${l.line_number}`}</p>
-                <p className="text-xs text-gray-400">Line #{l.line_number}</p>
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {lines.map((l) => (
+              <div key={l.id} className="card flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-lg text-gray-900">{l.label ?? `Line ${l.line_number}`}</p>
+                  <p className="text-xs text-gray-400">Line #{l.line_number}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => router.push(`/admin/updates?partitionId=${selectedPartitionId}&lineId=${l.id}`)}
+                    className="w-10 h-10 flex items-center justify-center rounded-xl text-blue-500 hover:bg-blue-50 active:scale-90"
+                    title="View Updates"
+                  >
+                    <Activity className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(l.id)}
+                    className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-50 active:scale-90"
+                    title="Delete Line"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => router.push(`/admin/updates?partitionId=${selectedPartitionId}&lineId=${l.id}`)}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl text-blue-500 hover:bg-blue-50 active:scale-90"
-                  title="View Updates"
-                >
-                  <Activity className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(l.id)}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-50"
-                  title="Delete Line"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-          {lines.length === 0 && (
-            <p className="text-center text-gray-400 py-10">No lines for this partition</p>
-          )}
-        </div>
+            ))}
+            {lines.length === 0 && (
+              <p className="text-center text-gray-400 py-10">No lines for this partition</p>
+            )}
+          </div>
+        )}
       </main>
       <BottomNav />
     </div>

@@ -48,13 +48,32 @@ export default function AdminPlantsPage() {
     }
   }, [selPartitionId]);
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (selLineId) {
-      db.plants.where("line_id").equals(selLineId).toArray().then((p) =>
-        setPlants(p.sort((a, b) => a.position - b.position))
-      );
+      loadPlants(selLineId);
     }
   }, [selLineId]);
+
+  const loadPlants = async (lineId: string) => {
+    setLoading(true);
+    try {
+      const local = await db.plants.where("line_id").equals(lineId).toArray();
+      if (local.length > 0) {
+        setPlants(local.sort((a, b) => a.position - b.position));
+      } else {
+        const res = await fetch(`/api/plants?line_id=${lineId}`);
+        if (res.ok) {
+          const { data } = await res.json();
+          await db.plants.bulkPut(data);
+          setPlants(data.sort((a: any, b: any) => a.position - b.position));
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAdd = async () => {
     const pos = parseInt(position);
@@ -141,28 +160,38 @@ export default function AdminPlantsPage() {
         </div>
 
         {/* Plants list */}
-        <div className="space-y-2">
-          {plants.map((p) => (
-            <div key={p.id} className="card flex items-center justify-between">
-              <div>
-                <p className="font-bold">#{p.position} — {masters.find((m) => m.id === p.plant_master_id)?.name ?? p.label}</p>
-                <p className="text-xs text-gray-400">{p.id.slice(0, 8)}…</p>
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {plants.map((p) => (
+              <div key={p.id} className="card flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-gray-900">
+                    #{p.position} — {masters.find((m) => m.id === p.plant_master_id)?.name ?? p.label}
+                  </p>
+                  <p className="text-xs text-gray-400">{p.id.slice(0, 8)}…</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    await db.plants.delete(p.id);
+                    setPlants((prev) => prev.filter((pl) => pl.id !== p.id));
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-50 active:scale-95 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                onClick={async () => {
-                  await db.plants.delete(p.id);
-                  setPlants((prev) => prev.filter((pl) => pl.id !== p.id));
-                }}
-                className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-          {plants.length === 0 && (
-            <p className="text-center text-gray-400 py-10">No plants in this line</p>
-          )}
-        </div>
+            ))}
+            {plants.length === 0 && (
+              <p className="text-center text-gray-400 py-10">No plants in this line</p>
+            )}
+          </div>
+        )}
       </main>
       <BottomNav />
     </div>

@@ -7,6 +7,7 @@ import { db } from "@/lib/db/dexie";
 import type { PlantMaster } from "@/lib/types";
 import { ArrowLeft, Plus, Trash2, RefreshCw } from "lucide-react";
 import { enqueuePlantMaster } from "@/lib/sync/syncEngine";
+import { SyncBadge } from "@/components/SyncBadge";
 
 /**
  * Admin — Plant Master list (reusable plant name catalogue).
@@ -17,20 +18,36 @@ export default function AdminPlantMasterPage() {
 
   const [masters, setMasters] = useState<PlantMaster[]>([]);
   const [newName, setNewName] = useState("");
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    db.plant_master.toArray().then((m) => {
-      if (m.length === 0 && isDemoMode) {
-        const demo: PlantMaster[] = ["Tomato", "Pepper", "Basil", "Lettuce", "Cucumber"].map(
-          (name) => ({ id: crypto.randomUUID(), name, created_at: new Date().toISOString() })
-        );
-        db.plant_master.bulkPut(demo).then(() => setMasters(demo));
+  useEffect(() => { load(); }, []);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const local = await db.plant_master.toArray();
+      if (local.length > 0) {
+        setMasters(local.sort((a, b) => a.name.localeCompare(b.name)));
       } else {
-        setMasters(m.sort((a, b) => a.name.localeCompare(b.name)));
+        // Fetch from API
+        const res = await fetch("/api/plant-master");
+        if (res.ok) {
+          const { data } = await res.json();
+          await db.plant_master.bulkPut(data);
+          setMasters(data.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+        } else if (isDemoMode) {
+          const demo: PlantMaster[] = ["Tomato", "Pepper", "Basil", "Lettuce", "Cucumber"].map(
+            (name) => ({ id: crypto.randomUUID(), name, created_at: new Date().toISOString() })
+          );
+          await db.plant_master.bulkPut(demo);
+          setMasters(demo);
+        }
       }
-    });
-  }, []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAdd = async () => {
     if (!newName.trim()) return;
@@ -57,9 +74,12 @@ export default function AdminPlantMasterPage() {
   return (
     <div className="flex flex-col min-h-dvh bg-gray-50 pb-20">
       <header className="bg-farm-gradient px-4 pt-4 pb-5">
-        <button onClick={() => router.back()} className="flex items-center gap-1 text-green-200 text-sm mb-3">
-          <ArrowLeft className="w-4 h-4" /> Admin
-        </button>
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => router.back()} className="flex items-center gap-1 text-green-200 text-sm">
+            <ArrowLeft className="w-4 h-4" /> Admin
+          </button>
+          <SyncBadge />
+        </div>
         <h1 className="text-white text-2xl font-bold">Plant Names</h1>
       </header>
 
@@ -82,19 +102,30 @@ export default function AdminPlantMasterPage() {
           </button>
         </div>
 
-        <div className="space-y-2">
-          {masters.map((m) => (
-            <div key={m.id} className="card flex items-center justify-between">
-              <p className="font-bold text-lg">{m.name}</p>
-              <button
-                onClick={() => handleDelete(m.id)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {masters.map((m) => (
+              <div key={m.id} className="card flex items-center justify-between">
+                <p className="font-bold text-lg text-gray-900">{m.name}</p>
+                <button
+                  onClick={() => handleDelete(m.id)}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {masters.length === 0 && (
+              <p className="text-center text-gray-400 py-10">No plant names added yet</p>
+            )}
+          </div>
+        )}
       </main>
       <BottomNav />
     </div>
