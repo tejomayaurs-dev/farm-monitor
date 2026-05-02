@@ -27,6 +27,10 @@ export async function syncToBackend(
   // Group by action_type for batch API calls
   const statusLogs = items.filter((i) => i.action_type === "status_log");
   const activities = items.filter((i) => i.action_type === "activity");
+  const partitions = items.filter((i) => i.action_type === "partition");
+  const lines = items.filter((i) => i.action_type === "line");
+  const plants = items.filter((i) => i.action_type === "plant");
+  const masters = items.filter((i) => i.action_type === "plant_master");
 
   // Sync status logs
   if (statusLogs.length > 0) {
@@ -42,11 +46,68 @@ export async function syncToBackend(
     failed += result.failed;
   }
 
+  // Sync partitions (Note: using direct endpoint, batch not yet implemented on server)
+  if (partitions.length > 0) {
+    for (const item of partitions) {
+      const result = await syncSingle(item, "/api/partitions");
+      if (result) synced++; else failed++;
+    }
+  }
+
+  // Sync lines
+  if (lines.length > 0) {
+    for (const item of lines) {
+      const result = await syncSingle(item, "/api/lines");
+      if (result) synced++; else failed++;
+    }
+  }
+
+  // Sync plants
+  if (plants.length > 0) {
+    for (const item of plants) {
+      const result = await syncSingle(item, "/api/plants");
+      if (result) synced++; else failed++;
+    }
+  }
+
+  // Sync plant masters
+  if (masters.length > 0) {
+    for (const item of masters) {
+      const result = await syncSingle(item, "/api/plant-master");
+      if (result) synced++; else failed++;
+    }
+  }
+
   // Update pending count after sync
   const remaining = await getPendingCount();
   onProgress?.(remaining);
 
   return { synced, failed };
+}
+
+async function syncSingle(item: SyncQueueItem, endpoint: string): Promise<boolean> {
+  if (item.retry_count >= MAX_RETRIES) return false;
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(item.payload),
+    });
+
+    if (res.ok) {
+      await markSynced([item.id!]);
+      return true;
+    } else {
+      await incrementRetryCount([item.id!]);
+      if (item.retry_count + 1 >= MAX_RETRIES) {
+        await markFailed([item.id!]);
+      }
+      return false;
+    }
+  } catch {
+    return false;
+  }
 }
 
 async function syncBatch(
@@ -140,6 +201,50 @@ export async function enqueueActivity(payload: {
     action_type: "activity",
     payload: payload as any,
     timestamp: payload.timestamp,
+    sync_status: "pending",
+    retry_count: 0,
+  });
+}
+
+export async function enqueuePartition(payload: any): Promise<void> {
+  await db.sync_queue.add({
+    local_id: payload.id,
+    action_type: "partition",
+    payload,
+    timestamp: new Date().toISOString(),
+    sync_status: "pending",
+    retry_count: 0,
+  });
+}
+
+export async function enqueueLine(payload: any): Promise<void> {
+  await db.sync_queue.add({
+    local_id: payload.id,
+    action_type: "line",
+    payload,
+    timestamp: new Date().toISOString(),
+    sync_status: "pending",
+    retry_count: 0,
+  });
+}
+
+export async function enqueuePlant(payload: any): Promise<void> {
+  await db.sync_queue.add({
+    local_id: payload.id,
+    action_type: "plant",
+    payload,
+    timestamp: new Date().toISOString(),
+    sync_status: "pending",
+    retry_count: 0,
+  });
+}
+
+export async function enqueuePlantMaster(payload: any): Promise<void> {
+  await db.sync_queue.add({
+    local_id: payload.id,
+    action_type: "plant_master",
+    payload,
+    timestamp: new Date().toISOString(),
     sync_status: "pending",
     retry_count: 0,
   });

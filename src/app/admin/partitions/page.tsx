@@ -7,6 +7,7 @@ import { db } from "@/lib/db/dexie";
 import type { Partition } from "@/lib/types";
 import { ArrowLeft, Plus, Trash2, RefreshCw, Activity } from "lucide-react";
 import { useAppStore } from "@/lib/store/useAppStore";
+import { enqueuePartition } from "@/lib/sync/syncEngine";
 
 /**
  * Admin — Partition Management (CRUD).
@@ -55,11 +56,7 @@ export default function AdminPartitionsPage() {
       await db.partitions.put(partition);
 
       if (!isDemoMode) {
-        await fetch("/api/partitions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(partition),
-        });
+        await enqueuePartition(partition);
       }
 
       setPartitions((prev) => [...prev, partition].sort((a, b) => a.name.localeCompare(b.name)));

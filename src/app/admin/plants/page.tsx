@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { db } from "@/lib/db/dexie";
 import type { Plant, Line, Partition, PlantMaster } from "@/lib/types";
 import { ArrowLeft, Plus, Trash2, RefreshCw } from "lucide-react";
+import { enqueuePlant } from "@/lib/sync/syncEngine";
 
 /**
  * Admin — Plant placement under lines.
@@ -71,11 +72,7 @@ export default function AdminPlantsPage() {
     };
     await db.plants.put(plant);
     if (!isDemoMode) {
-      await fetch("/api/plants", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(plant),
-      });
+      await enqueuePlant(plant);
     }
     setPlants((prev) => [...prev, plant].sort((a, b) => a.position - b.position));
     setPosition("");

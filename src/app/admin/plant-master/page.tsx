@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { db } from "@/lib/db/dexie";
 import type { PlantMaster } from "@/lib/types";
 import { ArrowLeft, Plus, Trash2, RefreshCw } from "lucide-react";
+import { enqueuePlantMaster } from "@/lib/sync/syncEngine";
 
 /**
  * Admin — Plant Master list (reusable plant name catalogue).
@@ -41,11 +42,7 @@ export default function AdminPlantMasterPage() {
     };
     await db.plant_master.put(item);
     if (!isDemoMode) {
-      await fetch("/api/plant-master", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item),
-      });
+      await enqueuePlantMaster(item);
     }
     setMasters((prev) => [...prev, item].sort((a, b) => a.name.localeCompare(b.name)));
     setNewName("");

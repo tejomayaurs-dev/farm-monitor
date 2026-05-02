@@ -85,13 +85,13 @@ export interface PlantActivity {
 // SYNC QUEUE (IndexedDB only)
 // ==========================================
 export type SyncStatus = "pending" | "synced" | "failed";
-export type SyncActionType = "status_log" | "activity";
+export type SyncActionType = "status_log" | "activity" | "partition" | "line" | "plant" | "plant_master";
 
 export interface SyncQueueItem {
   id?: number; // Auto-increment in Dexie
   local_id: string; // UUID generated on device
   action_type: SyncActionType;
-  payload: PlantStatusLog | PlantActivity;
+  payload: PlantStatusLog | PlantActivity | Partition | Line | Plant | PlantMaster;
   timestamp: string;
   sync_status: SyncStatus;
   retry_count: number;

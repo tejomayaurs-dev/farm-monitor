@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { db } from "@/lib/db/dexie";
 import type { Line, Partition } from "@/lib/types";
 import { ArrowLeft, Plus, Trash2, RefreshCw, Activity } from "lucide-react";
+import { enqueueLine } from "@/lib/sync/syncEngine";
 
 /**
  * Admin — Line Management (CRUD).
@@ -52,11 +53,7 @@ export default function AdminLinesPage() {
     };
     await db.lines.put(line);
     if (!isDemoMode) {
-      await fetch("/api/lines", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(line),
-      });
+      await enqueueLine(line);
     }
     setLines((prev) => [...prev, line].sort((a, b) => a.line_number - b.line_number));
     setNewLineNumber("");
