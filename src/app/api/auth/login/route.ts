@@ -58,11 +58,27 @@ export async function POST(request: NextRequest) {
       .eq("id", authData.user.id)
       .single();
 
-    if (profileErr) {
-      console.error("Profile fetch error:", profileErr.message);
+    let userProfile = profile;
+    if (profileErr || !profile) {
+      console.log("Profile missing, creating default profile for user:", authData.user.id);
+      const { data: newProfile, error: createErr } = await manualClient
+        .from("profiles")
+        .insert({
+          id: authData.user.id,
+          role: "user",
+          full_name: authData.user.user_metadata?.full_name || username.split("@")[0],
+        })
+        .select()
+        .single();
+      
+      if (!createErr) {
+        userProfile = newProfile;
+      } else {
+        console.error("Failed to auto-create profile:", createErr.message);
+      }
     }
 
-    return NextResponse.json({ success: true, profile: profile || authData.user });
+    return NextResponse.json({ success: true, profile: userProfile || authData.user });
   } catch (e: any) {
     if (process.env.NEXT_PUBLIC_AUTH_MODE === "demo" && username) {
       return NextResponse.json({

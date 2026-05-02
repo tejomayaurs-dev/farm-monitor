@@ -32,21 +32,15 @@ export async function syncToBackend(
   const plants = items.filter((i) => i.action_type === "plant");
   const masters = items.filter((i) => i.action_type === "plant_master");
 
-  // Sync status logs
-  if (statusLogs.length > 0) {
-    const result = await syncBatch(statusLogs, "/api/sync/status");
-    synced += result.synced;
-    failed += result.failed;
+  // 1. Sync plant masters (essential for plants)
+  if (masters.length > 0) {
+    for (const item of masters) {
+      const result = await syncSingle(item, "/api/plant-master");
+      if (result) synced++; else failed++;
+    }
   }
 
-  // Sync activities
-  if (activities.length > 0) {
-    const result = await syncBatch(activities, "/api/sync/activities");
-    synced += result.synced;
-    failed += result.failed;
-  }
-
-  // Sync partitions (Note: using direct endpoint, batch not yet implemented on server)
+  // 2. Sync partitions (top level)
   if (partitions.length > 0) {
     for (const item of partitions) {
       const result = await syncSingle(item, "/api/partitions");
@@ -54,7 +48,7 @@ export async function syncToBackend(
     }
   }
 
-  // Sync lines
+  // 3. Sync lines (depend on partitions)
   if (lines.length > 0) {
     for (const item of lines) {
       const result = await syncSingle(item, "/api/lines");
@@ -62,7 +56,7 @@ export async function syncToBackend(
     }
   }
 
-  // Sync plants
+  // 4. Sync plants (depend on lines and masters)
   if (plants.length > 0) {
     for (const item of plants) {
       const result = await syncSingle(item, "/api/plants");
@@ -70,12 +64,18 @@ export async function syncToBackend(
     }
   }
 
-  // Sync plant masters
-  if (masters.length > 0) {
-    for (const item of masters) {
-      const result = await syncSingle(item, "/api/plant-master");
-      if (result) synced++; else failed++;
-    }
+  // 5. Sync status logs (depend on plants)
+  if (statusLogs.length > 0) {
+    const result = await syncBatch(statusLogs, "/api/sync/status");
+    synced += result.synced;
+    failed += result.failed;
+  }
+
+  // 6. Sync activities (depend on plants)
+  if (activities.length > 0) {
+    const result = await syncBatch(activities, "/api/sync/activities");
+    synced += result.synced;
+    failed += result.failed;
   }
 
   // Update pending count after sync
