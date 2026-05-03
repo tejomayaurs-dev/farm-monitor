@@ -9,8 +9,9 @@ import {
   Rows3,
   Sprout,
   BookOpen,
-  ChevronRight,
+   ChevronRight,
   Settings,
+  BarChart,
 } from "lucide-react";
 import clsx from "clsx";
 import { useEffect } from "react";
@@ -44,6 +45,13 @@ const ADMIN_ITEMS = [
     sublabel: "Place plants under lines",
     color: "bg-emerald-50 text-emerald-700",
   },
+  {
+    href: "/admin/reports",
+    icon: BarChart,
+    label: "admin.reports",
+    sublabel: "Farm analytics and plant counts",
+    color: "bg-purple-50 text-purple-700",
+  },
 ];
 
 /**
@@ -54,14 +62,9 @@ export default function AdminPage() {
   const router = useRouter();
   const { profile, language } = useAppStore();
 
-  // Guard: redirect non-admins
-  useEffect(() => {
-    if (profile && profile.role !== "admin") {
-      router.replace("/dashboard");
-    }
-  }, [profile]);
-
-  if (profile?.role !== "admin") return null;
+  // Role guard removed per user request to show admin features to all authenticated users
+  // useEffect(() => { ... }, [profile]);
+  // if (profile?.role !== "admin") return null;
 
   return (
     <div className="flex flex-col min-h-dvh bg-gray-50 pb-20">
