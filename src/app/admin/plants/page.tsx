@@ -34,8 +34,9 @@ export default function AdminPlantsPage() {
       if (p.length) setSelPartitionId(p[0].id);
     });
     db.plant_master.toArray().then((m) => {
-      setMasters(m);
-      if (m.length) setSelMasterId(m[0].id);
+      const sorted = m.sort((a, b) => a.name.localeCompare(b.name));
+      setMasters(sorted);
+      if (sorted.length) setSelMasterId(sorted[0].id);
     });
   }, []);
 
@@ -95,8 +96,7 @@ export default function AdminPlantsPage() {
       await enqueuePlant(plant);
     }
     setPlants((prev) => [...prev, plant].sort((a, b) => a.position - b.position));
-    setPosition("");
-    setPlantationYear("");
+    // Retain position and plantationYear as requested
     setSaving(false);
   };
 
