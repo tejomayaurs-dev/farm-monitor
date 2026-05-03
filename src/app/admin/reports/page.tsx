@@ -153,23 +153,30 @@ export default function AdminReportsPage() {
                 <Leaf className="w-3 h-3" /> Plant Variety by Partition
               </h2>
               {Object.entries(data.partitionNames).map(([id, name]) => (
-                <div key={id} className="card p-0 overflow-hidden mb-3">
-                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-100 flex justify-between items-center">
-                    <span className="font-bold text-gray-700">{name}</span>
+                <div key={id} className="mb-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="font-bold text-gray-700 text-lg">{name}</span>
                     <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                       {data.totalByPartition[id] || 0} Total
                     </span>
                   </div>
-                  <div className="divide-y divide-gray-50">
+                  
+                  <div className="grid grid-cols-3 gap-3">
                     {data.plantCountsByPartition[id] ? (
-                      Object.entries(data.plantCountsByPartition[id]).map(([pName, count]) => (
-                        <div key={pName} className="px-4 py-3 flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{pName}</span>
-                          <span className="font-bold text-gray-900">{count}</span>
-                        </div>
-                      ))
+                      Object.entries(data.plantCountsByPartition[id])
+                        .sort((a, b) => b[1] - a[1]) // Sort by count descending
+                        .map(([pName, count]) => (
+                          <div key={pName} className="card p-3 flex flex-col items-center justify-center text-center shadow-sm border border-gray-100 bg-white">
+                            <span className="text-lg font-black text-gray-900">{count}</span>
+                            <span className="text-[10px] text-gray-400 font-bold uppercase mt-1 leading-tight line-clamp-2">
+                              {pName}
+                            </span>
+                          </div>
+                        ))
                     ) : (
-                      <p className="p-4 text-center text-gray-400 text-sm italic">No plants recorded</p>
+                      <div className="col-span-3 card p-4 text-center text-gray-400 text-sm italic">
+                        No plants recorded
+                      </div>
                     )}
                   </div>
                 </div>
