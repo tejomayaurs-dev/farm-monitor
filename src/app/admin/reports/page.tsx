@@ -40,12 +40,38 @@ export default function AdminReportsPage() {
   const generateReports = async () => {
     setLoading(true);
     try {
-      const [partitions, lines, plants, masters] = await Promise.all([
-        db.partitions.toArray(),
-        db.lines.toArray(),
-        db.plants.toArray(),
-        db.plant_master.toArray(),
-      ]);
+      let partitions = await db.partitions.toArray();
+      let lines = await db.lines.toArray();
+      let plants = await db.plants.toArray();
+      let masters = await db.plant_master.toArray();
+
+      // Server fallback if local cache is empty
+      if (partitions.length === 0) {
+        console.log("[Reports] Local cache empty, fetching from server...");
+        const [pRes, lRes, plRes, mRes] = await Promise.all([
+          fetch("/api/partitions").then(r => r.json()),
+          fetch("/api/lines").then(r => r.json()),
+          fetch("/api/plants").then(r => r.json()),
+          fetch("/api/plant-master").then(r => r.json())
+        ]);
+
+        if (pRes.data) {
+          partitions = pRes.data;
+          await db.partitions.bulkPut(partitions);
+        }
+        if (lRes.data) {
+          lines = lRes.data;
+          await db.lines.bulkPut(lines);
+        }
+        if (plRes.data) {
+          plants = plRes.data;
+          await db.plants.bulkPut(plants);
+        }
+        if (mRes.data) {
+          masters = mRes.data;
+          await db.plant_master.bulkPut(masters);
+        }
+      }
 
       const partitionNames: Record<string, string> = {};
       partitions.forEach(p => partitionNames[p.id] = p.name);
