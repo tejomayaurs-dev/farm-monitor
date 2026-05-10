@@ -255,3 +255,36 @@ export async function enqueuePlantMaster(payload: any): Promise<void> {
     retry_count: 0,
   });
 }
+
+/**
+ * Hard reset: Clear local DB and refetch everything from Supabase API.
+ */
+export async function restoreToDefaults(): Promise<void> {
+  const { clearLocalCache, seedLocalData } = await import("@/lib/db/dexie");
+
+  // 1. Clear local
+  await clearLocalCache();
+
+  // 2. Fetch everything in parallel
+  const [partsRes, linesRes, mastersRes, plantsRes] = await Promise.all([
+    fetch("/api/partitions"),
+    fetch("/api/lines"),
+    fetch("/api/plant-master"),
+    fetch("/api/plants"),
+  ]);
+
+  const [parts, lines, masters, plants] = await Promise.all([
+    partsRes.ok ? partsRes.json() : { data: [] },
+    linesRes.ok ? linesRes.json() : { data: [] },
+    mastersRes.ok ? mastersRes.json() : { data: [] },
+    plantsRes.ok ? plantsRes.json() : { data: [] },
+  ]);
+
+  // 3. Seed local DB
+  await seedLocalData({
+    partitions: parts.data || [],
+    lines: lines.data || [],
+    plant_master: masters.data || [],
+    plants: plants.data || [],
+  });
+}

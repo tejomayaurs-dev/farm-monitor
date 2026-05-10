@@ -66,6 +66,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "action.update_status": "Update Status",
     "action.add_activity": "Add Activity",
     "action.done": "Done",
+    "action.restore_default": "Restore to Default",
+    "action.restore_confirm": "This will clear all local data and reload from the server. Are you sure?",
+    "action.restoring": "Restoring data...",
 
     // Misc
     "misc.offline_banner": "You're offline — changes saved locally",
@@ -133,6 +136,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "action.update_status": "ಸ್ಥಿತಿ ಅಪ್ಡೇಟ್",
     "action.add_activity": "ಚಟುವಟಿಕೆ ಸೇರಿಸಿ",
     "action.done": "ಮುಗಿಯಿತು",
+    "action.restore_default": "ಪೂರ್ವಸ್ಥಿತಿಗೆ ತರಿಸಿ",
+    "action.restore_confirm": "ಇದು ಎಲ್ಲಾ ಸ್ಥಳೀಯ ಡೇಟಾವನ್ನು ಅಳಿಸುತ್ತದೆ ಮತ್ತು ಸರ್ವರ್‌ನಿಂದ ಮರುಲೋಡ್ ಮಾಡುತ್ತದೆ. ನೀವು ಖಚಿತವೇ?",
+    "action.restoring": "ಡೇಟಾವನ್ನು ಮರುಸ್ಥಾಪಿಸಲಾಗುತ್ತಿದೆ...",
 
     // Misc
     "misc.offline_banner": "ನೀವು ಆಫ್‌ಲೈನ್ — ಬದಲಾವಣೆಗಳು ಸ್ಥಳೀಯವಾಗಿ ಉಳಿಸಲಾಗಿದೆ",

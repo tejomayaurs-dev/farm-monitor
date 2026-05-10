@@ -8,7 +8,8 @@ import { t } from "@/lib/i18n/translations";
 import { SyncBadge } from "@/components/SyncBadge";
 import { BottomNav } from "@/components/BottomNav";
 import type { Partition } from "@/lib/types";
-import { Leaf, LogOut, Languages } from "lucide-react";
+import { Leaf, LogOut, Languages, RefreshCcw } from "lucide-react";
+import { restoreToDefaults } from "@/lib/sync/syncEngine";
 import clsx from "clsx";
 
 /** Partition color palette — cycles through farm-themed colors */
@@ -47,6 +48,7 @@ export default function DashboardPage() {
 
   const [partitions, setPartitions] = useState<Partition[]>([]);
   const [loading, setLoading] = useState(true);
+  const [restoring, setRestoring] = useState(false);
   const isDemoMode = process.env.NEXT_PUBLIC_AUTH_MODE === "demo";
 
   useEffect(() => {
@@ -96,6 +98,22 @@ export default function DashboardPage() {
     router.push(`/dashboard/${partition.id}`);
   };
 
+  const handleRestore = async () => {
+    if (!confirm(t("action.restore_confirm", language))) return;
+
+    setRestoring(true);
+    try {
+      await restoreToDefaults();
+      await loadPartitions();
+      alert(t("action.done", language));
+    } catch (error) {
+      console.error("Restore failed:", error);
+      alert("Restore failed. Please try again.");
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-dvh bg-gray-50 pb-20">
       {/* Header */}
@@ -113,6 +131,17 @@ export default function DashboardPage() {
               title="Toggle Kannada / English"
             >
               <Languages className="w-5 h-5 text-white" />
+            </button>
+            <button
+              onClick={handleRestore}
+              disabled={restoring}
+              className={clsx(
+                "w-9 h-9 bg-white/20 rounded-full flex items-center justify-center active:scale-90 transition-transform",
+                restoring && "animate-spin cursor-not-allowed"
+              )}
+              title={t("action.restore_default", language)}
+            >
+              <RefreshCcw className="w-5 h-5 text-white" />
             </button>
             <button
               onClick={handleLogout}

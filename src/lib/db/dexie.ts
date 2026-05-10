@@ -105,3 +105,15 @@ export async function seedLocalData(data: {
   if (data.plant_master?.length) await db.plant_master.bulkPut(data.plant_master);
   if (data.plants?.length) await db.plants.bulkPut(data.plants);
 }
+
+/** Clear all local data mirrors (leaves sync_queue intact for safety) */
+export async function clearLocalCache() {
+  await Promise.all([
+    db.partitions.clear(),
+    db.lines.clear(),
+    db.plant_master.clear(),
+    db.plants.clear(),
+    db.plant_status_logs_local.clear(),
+    db.plant_activities_local.clear(),
+  ]);
+}
